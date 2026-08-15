@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Rejected Interns</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="public/images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Rejected Interns</h2>
+            <div id="rejected-message" class="message hidden"></div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Intern ID</th>
+                            <th>Name</th>
+                            <th>College</th>
+                            <th>Branch</th>
+                            <th>Rejected By</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rejected-interns-table-body">
+                        <!-- Rejected interns will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('rejected-interns-table-body');
+            const messageDiv = document.getElementById('rejected-message');
+            const mentors = getAllMentors();
+
+            function renderRejectedInterns() {
+                const rejectedInterns = getInternsByStatus('Rejected');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                if (rejectedInterns.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No interns currently rejected.</td></tr>';
+                    return;
+                }
+
+                rejectedInterns.forEach(intern => {
+                    const mentorName = intern.assignedMentorId ? getMentorById(intern.assignedMentorId)?.name || 'N/A' : 'N/A';
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${intern.id}</td>
+                        <td>${intern.name}</td>
+                        <td>${intern.college}</td>
+                        <td>${intern.branch}</td>
+                        <td>${mentorName}</td>
+                        <td>${intern.rejectionRemarks || 'N/A'}</td>
+                        <td>
+                            <select class="reassign-mentor-select" data-intern-id="${intern.id}">
+                                <option value="">Reassign Mentor</option>
+                                ${mentors.map(mentor => `<option value="${mentor.id}">${mentor.name} (${mentor.department})</option>`).join('')}
+                            </select>
+                            <button class="button reassign-button" data-intern-id="${intern.id}" disabled>Reassign</button>
+                        </td>
+                    `;
+                });
+
+                // Add event listeners for select and button
+                tableBody.querySelectorAll('.reassign-mentor-select').forEach(select => {
+                    select.addEventListener('change', (event) => {
+                        const internId = event.target.dataset.internId;
+                        const reassignButton = tableBody.querySelector(`.reassign-button[data-intern-id="${internId}"]`);
+                        reassignButton.disabled = !event.target.value; // Enable button if a mentor is selected
+                    });
+                });
+
+                tableBody.querySelectorAll('.reassign-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const internId = event.target.dataset.internId;
+                        const selectElement = tableBody.querySelector(`.reassign-mentor-select[data-intern-id="${internId}"]`);
+                        const newMentorId = selectElement.value;
+
+                        if (newMentorId) {
+                            // Update intern status and assigned mentor
+                            const internUpdated = updateIntern(internId, { status: 'Assigned', assignedMentorId: newMentorId, rejectionRemarks: null });
+                            // Assign intern to new mentor's list
+                            const mentorUpdated = assignInternToMentor(newMentorId, internId);
+
+                            if (internUpdated && mentorUpdated) {
+                                displayMessage(messageDiv.id, `Intern ${internId} reassigned to ${getMentorById(newMentorId).name}.`, 'success');
+                                renderRejectedInterns(); // Re-render table to remove reassigned intern
+                            } else {
+                                displayMessage(messageDiv.id, 'Failed to reassign mentor. Please try again.', 'error');
+                            }
+                        } else {
+                            displayMessage(messageDiv.id, 'Please select a mentor for reassignment.', 'error');
+                        }
+                    });
+                });
+            }
+
+            renderRejectedInterns();
+        });
+    </script>
+</body>
+</html>

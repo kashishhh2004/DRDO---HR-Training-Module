@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Mentor Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="public/images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Mentor Dashboard</h2>
+            <div id="mentor-dashboard-message" class="message hidden"></div>
+
+            <div class="form-group">
+                <label for="mentor-select">Select Mentor:</label>
+                <select id="mentor-select">
+                    <option value="">-- Select a Mentor --</option>
+                    <!-- Mentors will be loaded here -->
+                </select>
+            </div>
+
+            <div id="mentor-details" class="card hidden" style="margin-top: 20px;">
+                <h3><span id="selected-mentor-name"></span>'s Interns</h3>
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="new-assigned">New Assigned</button>
+                    <button class="tab-button" data-tab="ongoing-assigned">Ongoing</button>
+                    <button class="tab-button" data-tab="completed-assigned">Completed</button>
+                </div>
+
+                <div id="new-assigned" class="tab-content active data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Intern ID</th>
+                                <th>Name</th>
+                                <th>College</th>
+                                <th>Branch</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="new-assigned-table-body">
+                            <!-- New assigned interns will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="ongoing-assigned" class="tab-content data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Intern ID</th>
+                                <th>Name</th>
+                                <th>Project Title</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ongoing-assigned-table-body">
+                            <!-- Ongoing assigned interns will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="completed-assigned" class="tab-content data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Intern ID</th>
+                                <th>Name</th>
+                                <th>Project Title</th>
+                                <th>Certificate Issued</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completed-assigned-table-body">
+                            <!-- Completed assigned interns will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mentorSelect = document.getElementById('mentor-select');
+            const mentorDetailsDiv = document.getElementById('mentor-details');
+            const selectedMentorNameSpan = document.getElementById('selected-mentor-name');
+            const newAssignedTableBody = document.getElementById('new-assigned-table-body');
+            const ongoingAssignedTableBody = document.getElementById('ongoing-assigned-table-body');
+            const completedAssignedTableBody = document.getElementById('completed-assigned-table-body');
+            const messageDiv = document.getElementById('mentor-dashboard-message');
+
+            let currentMentorId = null;
+
+            function populateMentorSelect() {
+                const mentors = getAllMentors();
+                mentorSelect.innerHTML = '<option value="">-- Select a Mentor --</option>';
+                mentors.forEach(mentor => {
+                    const option = document.createElement('option');
+                    option.value = mentor.id;
+                    option.textContent = `${mentor.name} (${mentor.department})`;
+                    mentorSelect.appendChild(option);
+                });
+            }
+
+            function renderInternsForMentor(mentorId) {
+                currentMentorId = mentorId;
+                if (!mentorId) {
+                    mentorDetailsDiv.classList.add('hidden');
+                    return;
+                }
+
+                const mentor = getMentorById(mentorId);
+                if (!mentor) {
+                    mentorDetailsDiv.classList.add('hidden');
+                    return;
+                }
+
+                selectedMentorNameSpan.textContent = mentor.name;
+                mentorDetailsDiv.classList.remove('hidden');
+
+                const allInterns = getAllInterns();
+                const assignedInterns = allInterns.filter(intern => mentor.assignedInterns.includes(intern.id));
+
+                const newAssigned = assignedInterns.filter(intern => intern.status === 'Assigned');
+                const ongoingAssigned = assignedInterns.filter(intern => intern.status === 'Ongoing');
+                const completedAssigned = assignedInterns.filter(intern => intern.status === 'Completed');
+
+                // Render New Assigned Interns
+                newAssignedTableBody.innerHTML = '';
+                if (newAssigned.length === 0) {
+                    newAssignedTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No new assigned interns.</td></tr>';
+                } else {
+                    newAssigned.forEach(intern => {
+                        const row = newAssignedTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${intern.id}</td>
+                            <td>${intern.name}</td>
+                            <td>${intern.college}</td>
+                            <td>${intern.branch}</td>
+                            <td>
+                                <button class="button accept-button" data-intern-id="${intern.id}">Accept</button>
+                                <button class="button danger reject-button" data-intern-id="${intern.id}">Reject</button>
+                            </td>
+                        `;
+                    });
+                }
+
+                // Render Ongoing Assigned Interns
+                ongoingAssignedTableBody.innerHTML = '';
+                if (ongoingAssigned.length === 0) {
+                    ongoingAssignedTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No ongoing interns.</td></tr>';
+                } else {
+                    ongoingAssigned.forEach(intern => {
+                        const row = ongoingAssignedTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${intern.id}</td>
+                            <td>${intern.name}</td>
+                            <td>${intern.projectTitle || 'N/A'}</td>
+                            <td>
+                                <button class="button mark-completed-button" data-intern-id="${intern.id}">Mark as Completed</button>
+                            </td>
+                        `;
+                    });
+                }
+
+                // Render Completed Assigned Interns
+                completedAssignedTableBody.innerHTML = '';
+                if (completedAssigned.length === 0) {
+                    completedAssignedTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No completed interns.</td></tr>';
+                } else {
+                    completedAssigned.forEach(intern => {
+                        const row = completedAssignedTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${intern.id}</td>
+                            <td>${intern.name}</td>
+                            <td>${intern.projectTitle || 'N/A'}</td>
+                            <td>${intern.certificateIssued ? 'Yes' : 'No'}</td>
+                        `;
+                    });
+                }
+
+                attachEventListeners();
+            }
+
+            function attachEventListeners() {
+                // Accept Button
+                newAssignedTableBody.querySelectorAll('.accept-button').forEach(button => {
+                    button.onclick = (event) => {
+                        const internId = event.target.dataset.internId;
+                        const projectTitle = prompt("Enter project title for this intern:");
+                        if (projectTitle) {
+                            const success = updateIntern(internId, { status: 'Ongoing', projectTitle: projectTitle });
+                            if (success) {
+                                displayMessage(messageDiv.id, `Intern ${internId} accepted and project title set.`, 'success');
+                                renderInternsForMentor(currentMentorId);
+                            } else {
+                                displayMessage(messageDiv.id, 'Failed to accept intern.', 'error');
+                            }
+                        } else if (projectTitle === null) {
+                            // User cancelled prompt
+                        } else {
+                            displayMessage(messageDiv.id, 'Project title cannot be empty.', 'error');
+                        }
+                    };
+                });
+
+                // Reject Button
+                newAssignedTableBody.querySelectorAll('.reject-button').forEach(button => {
+                    button.onclick = (event) => {
+                        const internId = event.target.dataset.internId;
+                        const remarks = prompt("Enter rejection remarks:");
+                        if (remarks) {
+                            const successIntern = updateIntern(internId, { status: 'Rejected', rejectionRemarks: remarks, assignedMentorId: null, projectTitle: null });
+                            const successMentor = removeInternFromMentor(currentMentorId, internId);
+                            if (successIntern && successMentor) {
+                                displayMessage(messageDiv.id, `Intern ${internId} rejected.`, 'success');
+                                renderInternsForMentor(currentMentorId);
+                            } else {
+                                displayMessage(messageDiv.id, 'Failed to reject intern.', 'error');
+                            }
+                        } else if (remarks === null) {
+                            // User cancelled prompt
+                        } else {
+                            displayMessage(messageDiv.id, 'Rejection remarks cannot be empty.', 'error');
+                        }
+                    };
+                });
+
+                // Mark Completed Button
+                ongoingAssignedTableBody.querySelectorAll('.mark-completed-button').forEach(button => {
+                    button.onclick = (event) => {
+                        const internId = event.target.dataset.internId;
+                        if (confirm(`Are you sure you want to mark intern ${internId} as Completed?`)) {
+                            const success = updateIntern(internId, { status: 'Completed' });
+                            if (success) {
+                                displayMessage(messageDiv.id, `Intern ${internId} marked as completed.`, 'success');
+                                renderInternsForMentor(currentMentorId);
+                            } else {
+                                displayMessage(messageDiv.id, 'Failed to mark intern as completed.', 'error');
+                            }
+                        }
+                    };
+                });
+            }
+
+            // Event listener for mentor selection
+            mentorSelect.addEventListener('change', (event) => {
+                renderInternsForMentor(event.target.value);
+            });
+
+            // Tab switching logic
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                    event.target.classList.add('active');
+                    document.getElementById(event.target.dataset.tab).classList.add('active');
+                });
+            });
+
+            populateMentorSelect();
+        });
+    </script>
+</body>
+</html>

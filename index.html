@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Dashboard Overview</h2>
+            <div class="dashboard-grid">
+                <div class="card dashboard-button-card">
+                    <h3>Total Interns</h3>
+                    <p id="total-interns" class="text-center">0</p>
+                </div>
+                <div class="card dashboard-button-card">
+                    <h3>New Interns</h3>
+                    <p id="new-interns" class="text-center">0</p>
+                </div>
+                <div class="card dashboard-button-card">
+                    <h3>Ongoing Interns</h3>
+                    <p id="ongoing-interns" class="text-center">0</p>
+                </div>
+                <div class="card dashboard-button-card">
+                    <h3>Completed Interns</h3>
+                    <p id="completed-interns" class="text-center">0</p>
+                </div>
+                <div class="card dashboard-button-card">
+                    <h3>Rejected Interns</h3>
+                    <p id="rejected-interns" class="text-center">0</p>
+                </div>
+                <div class="card dashboard-button-card">
+                    <h3>Assigned Interns</h3>
+                    <p id="assigned-interns" class="text-center">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <div class="dashboard-grid">
+                <div class="card dashboard-button-card">
+                    <a href="add_intern.html" class="button">Add New Intern</a>
+                </div>
+                <div class="card dashboard-button-card">
+                    <a href="assign_mentor.html" class="button">Assign Mentor</a>
+                </div>
+                <div class="card dashboard-button-card">
+                    <a href="rejected_by_mentor.html" class="button">Rejected by Mentor</a>
+                </div>
+                <div class="card dashboard-button-card">
+                    <a href="ongoing.html" class="button">Ongoing Interns</a>
+                </div>
+                <div class="card dashboard-button-card">
+                    <a href="completed.html" class="button">Completed Interns</a>
+                </div>
+                <div class="card dashboard-button-card">
+                    <button id="export-csv-button" class="button secondary">Export Interns to CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card text-center">
+            <button id="reset-data-button" class="button danger">Reset All Data (For Testing)</button>
+            <button onclick="logout()" class="button danger">Logout</button>
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Warning: This will clear all stored intern and mentor data.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const interns = getAllInterns();
+            document.getElementById('total-interns').textContent = interns.length;
+            document.getElementById('new-interns').textContent = getInternsByStatus('New').length;
+            document.getElementById('ongoing-interns').textContent = getInternsByStatus('Ongoing').length;
+            document.getElementById('completed-interns').textContent = getInternsByStatus('Completed').length;
+            document.getElementById('rejected-interns').textContent = getInternsByStatus('Rejected').length;
+            document.getElementById('assigned-interns').textContent = interns.filter(i => i.status === 'Assigned').length;
+
+            document.getElementById('export-csv-button').addEventListener('click', () => {
+                exportToCsv(interns, 'drdo_interns.csv');
+            });
+
+            document.getElementById('reset-data-button').addEventListener('click', () => {
+                if (confirm("Are you sure you want to reset all data? This action cannot be undone.")) {
+                    resetAllData();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

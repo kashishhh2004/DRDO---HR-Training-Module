@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - DRDO Internship Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Admin Login</h2>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-username">Username</label>
+                    <input type="text" id="admin-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" name="password" required>
+                </div>
+                <button type="submit" class="button">Login</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        // Hardcoded admin credentials for demo purposes
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'password123';
+
+        document.getElementById('admin-login-form').addEventListener('submit', (event) => {
+            event.preventDefault();  // Prevent form from submitting
+
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            // Check credentials
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                // Set admin login status in localStorage
+                localStorage.setItem('isAdmin', 'true');
+                // Redirect to the Dashboard
+                window.location.href = 'index.html'; // Or any other page
+            } else {
+                alert('Incorrect username or password.');
+            }
+        });
+    </script>
+</body>
+</html>

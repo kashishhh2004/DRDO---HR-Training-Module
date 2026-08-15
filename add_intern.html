@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Add New Intern</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Add New Intern</h2>
+            <form id="add-intern-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="intern-name">Name</label>
+                        <input type="text" id="intern-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="intern-college">College</label>
+                        <input type="text" id="intern-college" name="college" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="intern-branch">Branch</label>
+                        <input type="text" id="intern-branch" name="branch" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="intern-email">Email</label>
+                        <input type="email" id="intern-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="intern-phone">Phone</label>
+                        <input type="tel" id="intern-phone" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="intern-duration">Duration (weeks)</label>
+                        <input type="number" id="intern-duration" name="duration" min="1" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="button">Add Intern</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.getElementById('add-intern-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const internData = {
+                name: document.getElementById('intern-name').value,
+                college: document.getElementById('intern-college').value,
+                branch: document.getElementById('intern-branch').value,
+                email: document.getElementById('intern-email').value,
+                phone: document.getElementById('intern-phone').value,
+                duration: document.getElementById('intern-duration').value,
+                status: 'New',
+                assignedMentorId: null,
+                projectTitle: null,
+                rejectionRemarks: null,
+                certificateIssued: false,
+                projectReportSubmitted: false,
+                attendance: null,
+            };
+
+            addIntern(internData);
+            alert('Intern Added Successfully!');
+            document.getElementById('add-intern-form').reset();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Ongoing Interns</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Ongoing Interns</h2>
+            <div id="ongoing-message" class="message hidden"></div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Intern ID</th>
+                            <th>Name</th>
+                            <th>College</th>
+                            <th>Branch</th>
+                            <th>Mentor</th>
+                            <th>Project Title</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ongoing-interns-table-body">
+                        <!-- Ongoing interns will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('ongoing-interns-table-body');
+            const messageDiv = document.getElementById('ongoing-message');
+
+            function renderOngoingInterns() {
+                const ongoingInterns = getInternsByStatus('Ongoing');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                if (ongoingInterns.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No interns currently ongoing.</td></tr>';
+                    return;
+                }
+
+                ongoingInterns.forEach(intern => {
+                    const mentorName = intern.assignedMentorId ? getMentorById(intern.assignedMentorId)?.name || 'N/A' : 'N/A';
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${intern.id}</td>
+                        <td>${intern.name}</td>
+                        <td>${intern.college}</td>
+                        <td>${intern.branch}</td>
+                        <td>${mentorName}</td>
+                        <td>${intern.projectTitle || 'N/A'}</td>
+                        <td>
+                            <button class="button mark-completed-button" data-intern-id="${intern.id}">Mark as Completed</button>
+                        </td>
+                    `;
+                });
+
+                // Add event listeners for mark completed button
+                tableBody.querySelectorAll('.mark-completed-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const internId = event.target.dataset.internId;
+                        if (confirm(`Are you sure you want to mark intern ${internId} as Completed?`)) {
+                            const success = updateIntern(internId, { status: 'Completed' });
+                            if (success) {
+                                displayMessage(messageDiv.id, `Intern ${internId} marked as completed.`, 'success');
+                                renderOngoingInterns(); // Re-render table to remove completed intern
+                            } else {
+                                displayMessage(messageDiv.id, 'Failed to mark intern as completed. Please try again.', 'error');
+                            }
+                        }
+                    });
+                });
+            }
+
+            renderOngoingInterns();
+        });
+    </script>
+</body>
+</html>

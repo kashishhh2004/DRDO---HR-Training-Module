@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Completed Interns</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Completed Interns</h2>
+            <div id="completed-message" class="message hidden"></div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Intern ID</th>
+                            <th>Name</th>
+                            <th>College</th>
+                            <th>Branch</th>
+                            <th>Mentor</th>
+                            <th>Project Title</th>
+                            <th>Report Submitted</th>
+                            <th>Attendance (%)</th>
+                            <th>Certificate Issued</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="completed-interns-table-body">
+                        <!-- Completed interns will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('completed-interns-table-body');
+            const messageDiv = document.getElementById('completed-message');
+
+            function renderCompletedInterns() {
+                const completedInterns = getInternsByStatus('Completed');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                if (completedInterns.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No interns have completed their internships yet.</td></tr>';
+                    return;
+                }
+
+                completedInterns.forEach(intern => {
+                    const mentorName = intern.assignedMentorId ? getMentorById(intern.assignedMentorId)?.name || 'N/A' : 'N/A';
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${intern.id}</td>
+                        <td>${intern.name}</td>
+                        <td>${intern.college}</td>
+                        <td>${intern.branch}</td>
+                        <td>${mentorName}</td>
+                        <td>${intern.projectTitle || 'N/A'}</td>
+                        <td>${intern.projectReportSubmitted ? 'Yes' : 'No'}</td>
+                        <td>${intern.attendance !== null ? intern.attendance : 'N/A'}</td>
+                        <td>${intern.certificateIssued ? 'Yes' : 'No'}</td>
+                        <td>
+                            ${!intern.certificateIssued ? `<button class="button issue-certificate-button" data-intern-id="${intern.id}">Issue Certificate</button>` : 'Certificate Issued'}
+                        </td>
+                    `;
+                });
+
+                // Add event listeners for issue certificate button
+                tableBody.querySelectorAll('.issue-certificate-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const internId = event.target.dataset.internId;
+                        const intern = getInternById(internId);
+
+                        const remarks = prompt("Enter remarks for certificate:");
+                        if (remarks === null) return; // User cancelled
+
+                        const projectReportSubmitted = confirm("Has the project report been submitted?");
+                        let attendance = null;
+                        let attendanceInput = prompt("Enter attendance percentage (0-100):");
+                        if (attendanceInput !== null) {
+                            attendance = parseInt(attendanceInput, 10);
+                            if (isNaN(attendance) || attendance < 0 || attendance > 100) {
+                                displayMessage(messageDiv.id, 'Invalid attendance percentage. Certificate not issued.', 'error');
+                                return;
+                            }
+                        } else {
+                            // User cancelled attendance input
+                            displayMessage(messageDiv.id, 'Attendance input cancelled. Certificate not issued.', 'error');
+                            return;
+                        }
+
+                        const success = updateIntern(internId, {
+                            certificateIssued: true,
+                            projectReportSubmitted: projectReportSubmitted,
+                            attendance: attendance,
+                            certificateRemarks: remarks // Add a new field for certificate remarks
+                        });
+
+                        if (success) {
+                            displayMessage(messageDiv.id, `Certificate issued for intern ${internId}.`, 'success');
+                            renderCompletedInterns(); // Re-render table
+                        } else {
+                            displayMessage(messageDiv.id, 'Failed to issue certificate. Please try again.', 'error');
+                        }
+                    });
+                });
+            }
+
+            renderCompletedInterns();
+        });
+    </script>
+</body>
+</html>

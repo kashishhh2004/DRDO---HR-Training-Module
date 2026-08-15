@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRDO Internship Portal - Assign Mentor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <img src="images/drdo_logo.png" alt="DRDO Logo" class="logo">
+            <h1>DRDO Internship Portal</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="add_intern.html">Add New Intern</a></li>
+                <li><a href="assign_mentor.html">Assign Mentor</a></li>
+                <li><a href="mentor_dashboard.html">Mentor View</a></li>
+                <li><a href="rejected_by_mentor.html">Rejected</a></li>
+                <li><a href="ongoing.html">Ongoing</a></li>
+                <li><a href="completed.html">Completed</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Assign Mentor to New Interns</h2>
+            <div id="assign-mentor-message" class="message hidden"></div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Intern ID</th>
+                            <th>Name</th>
+                            <th>College</th>
+                            <th>Branch</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="new-interns-table-body">
+                        <!-- Interns will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DRDO Internship Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('new-interns-table-body');
+            const mentors = getAllMentors();
+
+            function renderNewInterns() {
+                const newInterns = getInternsByStatus('New');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                if (newInterns.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No new interns available for mentor assignment.</td></tr>';
+                    return;
+                }
+
+                newInterns.forEach(intern => {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${intern.id}</td>
+                        <td>${intern.name}</td>
+                        <td>${intern.college}</td>
+                        <td>${intern.branch}</td>
+                        <td>${intern.email}</td>
+                        <td>${intern.status}</td>
+                        <td>
+                            <select class="mentor-select" data-intern-id="${intern.id}">
+                                <option value="">Select Mentor</option>
+                                ${mentors.map(mentor => `<option value="${mentor.id}">${mentor.name} (${mentor.department})</option>`).join('')}
+                            </select>
+                            <button class="button assign-button" data-intern-id="${intern.id}" disabled>Assign</button>
+                        </td>
+                    `;
+                });
+
+                // Add event listeners for select and button
+                tableBody.querySelectorAll('.mentor-select').forEach(select => {
+                    select.addEventListener('change', (event) => {
+                        const internId = event.target.dataset.internId;
+                        const assignButton = tableBody.querySelector(`.assign-button[data-intern-id="${internId}"]`);
+                        assignButton.disabled = !event.target.value; // Enable button if a mentor is selected
+                    });
+                });
+
+                tableBody.querySelectorAll('.assign-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const internId = event.target.dataset.internId;
+                        const selectElement = tableBody.querySelector(`.mentor-select[data-intern-id="${internId}"]`);
+                        const mentorId = selectElement.value;
+
+                        if (mentorId) {
+                            // Update intern status and assigned mentor
+                            const internUpdated = updateIntern(internId, { status: 'Assigned', assignedMentorId: mentorId });
+                            // Assign intern to mentor's list
+                            const mentorUpdated = assignInternToMentor(mentorId, internId);
+
+                            if (internUpdated && mentorUpdated) {
+                                displayMessage('assign-mentor-message', `Intern ${internId} assigned to ${getMentorById(mentorId).name}.`, 'success');
+                                renderNewInterns(); // Re-render table to remove assigned intern
+                            } else {
+                                displayMessage('assign-mentor-message', 'Failed to assign mentor. Please try again.', 'error');
+                            }
+                        } else {
+                            displayMessage('assign-mentor-message', 'Please select a mentor.', 'error');
+                        }
+                    });
+                });
+            }
+
+            renderNewInterns();
+        });
+    </script>
+</body>
+</html>
